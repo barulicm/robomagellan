@@ -1,0 +1,4 @@
+<launch>
+    <include file="camera.launch" />
+    <include file="gps.launch" />
+</launch>
