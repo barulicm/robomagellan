@@ -1,0 +1,17 @@
+joint_limits:
+  left_wheel:
+    has_position_limits: false
+    has_velocity_limits: true
+    max_velocity: 1.0
+    min_velocity: -1.0
+    has_acceleration_limits: false
+    has_jerk_limits: false
+    has_effort_limits: false
+  right_wheel:
+    has_position_limits: false
+    has_velocity_limits: true
+    max_velocity: 1.0
+    min_velocity: -1.0
+    has_acceleration_limits: false
+    has_jerk_limits: false
+    has_effort_limits: false

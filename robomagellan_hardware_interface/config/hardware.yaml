@@ -1,0 +1,6 @@
+robomagellan:
+  hardware_interface:
+    loop_hz: 10
+    joints:
+      - left_wheel
+      - right_wheel

@@ -1,0 +1,5 @@
+<launch>
+    <include file="$(find robomagellan_hardware_interface)/launch/robomagellan_velocity_controllers.launch"/>
+    <include file="camera.launch" />
+    <include file="gps.launch" />
+</launch>

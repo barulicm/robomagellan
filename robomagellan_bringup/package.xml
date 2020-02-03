@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>robomagellan_platform</name>
+  <name>robomagellan_bringup</name>
   <version>0.0.0</version>
-  <description>The robomagellan_platform package</description>
+  <description>The robomagellan_bringup package</description>
   <maintainer email="matthew.barulic@gmail.com">Matthew Barulic</maintainer>
   <license>MIT</license>
 
@@ -13,6 +13,8 @@
 
   <exec_depend>roscpp</exec_depend>
   <exec_depend>librealsense2</exec_depend>
+  <exec_depend>nmea_navsat_driver</exec_depend>
+  <exec_depend>robomagellan_hardware_interface</exec_depend>
 
   <export>
   </export>
