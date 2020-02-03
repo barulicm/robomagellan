@@ -4,12 +4,27 @@
 
 namespace robomagellan_hardware_interface
 {
-
+using namespace std::string_literals;
 using namespace hardware_interface;
 using joint_limits_interface::JointLimits;
 using joint_limits_interface::SoftJointLimits;
 using joint_limits_interface::VelocityJointSoftLimitsHandle;
 using joint_limits_interface::VelocityJointSoftLimitsInterface;
+
+constexpr double rotationsToRadians(double rots)
+{
+    return rots * 2.0 * M_PI;
+}
+
+constexpr double rpmToRadPerSec(double rpm)
+{
+    return rpm * 0.104719755;
+}
+
+constexpr double radPerSecTORPM(double rad_per_sec)
+{
+    return rad_per_sec * 9.5492965964254;
+}
 
 RobomagellanHardwareInterface::RobomagellanHardwareInterface(ros::NodeHandle &node_handle)
     : node_handle_(node_handle)
@@ -45,6 +60,12 @@ void RobomagellanHardwareInterface::init()
     registerInterface(&velocity_joint_soft_limits_interface_);
 
     battery_publisher_ = node_handle_.advertise<sensor_msgs::BatteryState>("/robomagellan/battery", 1);
+
+    auto device_name = "/dev/ttyUSB0"s;
+    if(!serial_port_.Open(device_name, 115200)) // TODO udev rules / other way to identify port name?
+    {
+        ROS_ERROR_STREAM("Could not open serial port: " << device_name);
+    }
 }
 
 void RobomagellanHardwareInterface::update(const ros::TimerEvent& e)
@@ -57,10 +78,27 @@ void RobomagellanHardwareInterface::update(const ros::TimerEvent& e)
 
 void RobomagellanHardwareInterface::read()
 {
+    if(!serial_port_.IsOpen())
+        return;
+    const auto serial_message = serial_port_.ReadLine();
 
+    std::vector<std::string> tokens;
+    boost::split(tokens, serial_message, boost::is_any_of(",$\n"));
+
+    if(tokens.size() != 5)
+    {
+        ROS_ERROR_STREAM("Received message did not contain the right number of tokens. Expected 5, but got " << tokens.size());
+        return;
+    }
+
+    joint_positions_[0] = rotationsToRadians(std::stod(tokens[0]));
+    joint_positions_[1] = rotationsToRadians(std::stod(tokens[1]));
+    joint_velocities_[0] = rpmToRadPerSec(std::stod(tokens[2]));
+    joint_velocities_[1] = rpmToRadPerSec(std::stod(tokens[3]));
+    const auto battery_voltage = std::stod(tokens[4]);
 
     sensor_msgs::BatteryState battery_msg;
-    battery_msg.voltage = 0.0f; // TODO read from serial
+    battery_msg.voltage = battery_voltage;
     battery_msg.current = NAN;
     battery_msg.charge = NAN;
     battery_msg.capacity = NAN;
@@ -72,14 +110,15 @@ void RobomagellanHardwareInterface::read()
     battery_publisher_.publish(battery_msg);
 }
 
-constexpr double radPerSecTORPM(double rad_per_sec)
-{
-    return rad_per_sec * 9.5492965964254;
-}
-
 void RobomagellanHardwareInterface::write(ros::Duration elapsed_time)
 {
+    if(!serial_port_.IsOpen())
+        return;
     const auto left_rpm = radPerSecTORPM(joint_velocity_commands_[0]);
     const auto right_rpm = radPerSecTORPM(joint_velocity_commands_[1]);
+
+    const auto serial_message = "$" + std::to_string(left_rpm) + ", " + std::to_string(right_rpm) + "\n";
+
+    serial_port_.Write(serial_message);
 }
 }

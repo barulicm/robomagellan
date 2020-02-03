@@ -11,6 +11,7 @@
 #include <controller_manager/controller_manager.h>
 #include <boost/scoped_ptr.hpp>
 #include <ros/ros.h>
+#include "robomagellan_hardware_interface/SerialPort.h"
 
 namespace robomagellan_hardware_interface
 {
@@ -48,6 +49,8 @@ private:
   boost::shared_ptr<controller_manager::ControllerManager> controller_manager_;
 
   ros::Publisher battery_publisher_;
+
+  SerialPort serial_port_;
 
   void setupJoint(const std::string& name, int index);
 };

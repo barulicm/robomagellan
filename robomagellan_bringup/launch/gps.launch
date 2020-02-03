@@ -1,6 +1,6 @@
 <launch>
     <node name="nmea_serial_driver" pkg="nmea_navsat_driver" type="nmea_serial_driver">
         <param name="port" type="str" value="TODO" />
-        <param name="baud" type="int" value="TODO" />
+        <param name="baud" type="int" value="9600" />
     </node>
 </launch>

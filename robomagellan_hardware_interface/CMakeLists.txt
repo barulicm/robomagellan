@@ -21,6 +21,6 @@ include_directories(
  ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(${PROJECT_NAME}_node src/robomagellan_hardware_interface.cpp src/robomagellan_hardware_interface_node.cpp)
+add_executable(${PROJECT_NAME}_node src/robomagellan_hardware_interface.cpp src/robomagellan_hardware_interface_node.cpp src/SerialPort.cpp)
 set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
 target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES})
