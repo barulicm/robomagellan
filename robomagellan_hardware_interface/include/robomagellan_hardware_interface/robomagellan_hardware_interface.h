@@ -11,7 +11,14 @@
 #include <controller_manager/controller_manager.h>
 #include <boost/scoped_ptr.hpp>
 #include <ros/ros.h>
-#include "robomagellan_hardware_interface/SerialPort.h"
+#include <serial/serial.h>
+
+/*
+ * TODO consider using https://github.com/wjwwood/serial
+ *
+ * Cause mine is noooot working
+ */
+
 
 namespace robomagellan_hardware_interface
 {
@@ -50,7 +57,9 @@ private:
 
   ros::Publisher battery_publisher_;
 
-  SerialPort serial_port_;
+  serial::Serial serial_port_;
+
+  std::string last_sent_message_;
 
   void setupJoint(const std::string& name, int index);
 };

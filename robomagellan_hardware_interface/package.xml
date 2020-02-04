@@ -50,6 +50,8 @@
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
 
+  <build_depend>serial</build_depend>
+
   <depend>hardware_interface</depend>
   <depend>controller_manager</depend>
   <depend>sensor_msgs</depend>

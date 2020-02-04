@@ -61,8 +61,16 @@ void RobomagellanHardwareInterface::init()
 
     battery_publisher_ = node_handle_.advertise<sensor_msgs::BatteryState>("/robomagellan/battery", 1);
 
-    auto device_name = "/dev/ttyUSB0"s;
-    if(!serial_port_.Open(device_name, 115200)) // TODO udev rules / other way to identify port name?
+    auto device_name = "/dev/ttyACM0"s;
+
+    serial_port_.setPort(device_name);
+    serial_port_.setBaudrate(115200);
+    auto serial_timeout = serial::Timeout::simpleTimeout(250);
+    serial_port_.setTimeout(serial_timeout);
+
+    serial_port_.open();
+
+    if(!serial_port_.isOpen()) // TODO udev rules / other way to identify port name?
     {
         ROS_ERROR_STREAM("Could not open serial port: " << device_name);
     }
@@ -78,16 +86,28 @@ void RobomagellanHardwareInterface::update(const ros::TimerEvent& e)
 
 void RobomagellanHardwareInterface::read()
 {
-    if(!serial_port_.IsOpen())
+    if(!serial_port_.isOpen())
         return;
-    const auto serial_message = serial_port_.ReadLine();
+
+    if(last_sent_message_.empty())
+        return;
+
+    if(!serial_port_.waitReadable())
+    {
+        ROS_WARN("Serial port timed out without receiving bytes");
+        return;
+    }
+
+    const auto serial_message = serial_port_.readline();
 
     std::vector<std::string> tokens;
     boost::split(tokens, serial_message, boost::is_any_of(",$\n"));
 
+    tokens.erase(std::remove(tokens.begin(), tokens.end(), ""), tokens.end());
+
     if(tokens.size() != 5)
     {
-        ROS_ERROR_STREAM("Received message did not contain the right number of tokens. Expected 5, but got " << tokens.size());
+        ROS_WARN_STREAM("Received message did not contain the right number of tokens. Expected 5, but got " << tokens.size() << "\n" << serial_message);
         return;
     }
 
@@ -99,26 +119,31 @@ void RobomagellanHardwareInterface::read()
 
     sensor_msgs::BatteryState battery_msg;
     battery_msg.voltage = battery_voltage;
+    battery_msg.present = battery_voltage > 4.0;
     battery_msg.current = NAN;
     battery_msg.charge = NAN;
     battery_msg.capacity = NAN;
     battery_msg.design_capacity = NAN;
     battery_msg.percentage = NAN;
-    battery_msg.power_supply_status = sensor_msgs::BatteryState::POWER_SUPPLY_STATUS_DISCHARGING;
+    battery_msg.power_supply_status = battery_msg.present ? sensor_msgs::BatteryState::POWER_SUPPLY_STATUS_DISCHARGING : sensor_msgs::BatteryState::POWER_SUPPLY_STATUS_UNKNOWN;
     battery_msg.power_supply_health = sensor_msgs::BatteryState::POWER_SUPPLY_HEALTH_UNKNOWN;
     battery_msg.power_supply_technology = sensor_msgs::BatteryState::POWER_SUPPLY_TECHNOLOGY_NIMH;
     battery_publisher_.publish(battery_msg);
+
+    last_sent_message_.clear();
 }
 
-void RobomagellanHardwareInterface::write(ros::Duration elapsed_time)
+void RobomagellanHardwareInterface::write(ros::Duration)
 {
-    if(!serial_port_.IsOpen())
+    if(!serial_port_.isOpen())
         return;
     const auto left_rpm = radPerSecTORPM(joint_velocity_commands_[0]);
     const auto right_rpm = radPerSecTORPM(joint_velocity_commands_[1]);
 
     const auto serial_message = "$" + std::to_string(left_rpm) + ", " + std::to_string(right_rpm) + "\n";
 
-    serial_port_.Write(serial_message);
+    serial_port_.write(serial_message);
+
+    last_sent_message_ = serial_message;
 }
 }
