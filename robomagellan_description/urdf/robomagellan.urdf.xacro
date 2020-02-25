@@ -28,7 +28,7 @@
         </visual>
         <collision>
             <geometry>
-                <box size="0.3302 0.4445 0.0508"/>
+                <mesh filename="package://robomagellan_description/meshes/Robot_Collision.dae"/>
             </geometry>
             <origin xyz="-0.1397 0 0" rpy="0 0 0"/>
         </collision>
