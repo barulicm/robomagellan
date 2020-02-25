@@ -4,9 +4,10 @@ const int left_servo_pin = 3;
 const int right_servo_pin = 5;
 const int battery_pin = A0;
 const double battery_factor = 7.2 / 1024;
+const double gear_factor = -1.0 / 3.0;
 
-Vex393EncoderMotor left_motor;
-Vex393EncoderMotor right_motor;
+Vex393EncoderMotor left_motor(gear_factor, 2.0, 0.0, 0.2);
+Vex393EncoderMotor right_motor(gear_factor, 2.0, 0.0, 0.2);
 
 void setup() {
   Wire.begin();
@@ -25,19 +26,18 @@ void loop() {
     parseCommand();
     sendReply();
   }
-
   
   left_motor.update();
   right_motor.update();
 
-  delay(100);
+  delay(10);
 }
 
 void parseCommand()
 {
   while(Serial.read() != '$');
   left_motor.setSpeed(Serial.parseFloat());
-  right_motor.setSpeed(Serial.parseFloat());
+  right_motor.setSpeed(-1.0*Serial.parseFloat());
   Serial.read(); // Take the newline out of the receive buffer
 }
 
@@ -52,6 +52,6 @@ void sendReply()
   Serial.print(",");
   Serial.print(right_motor.getSpeed());
   Serial.print(",");
-  Serial.print(analogRead(battery_pin) * battery_factor);
+  Serial.print(analogRead(battery_pin));
   Serial.println();
 }

@@ -7,8 +7,9 @@
 class Vex393EncoderMotor
 {
 public:
-  Vex393EncoderMotor()
-    : pid(&current_speed, &pid_out, &set_speed, 0.5, 0.0, 0.0, DIRECT)
+  Vex393EncoderMotor(double gearFactor = 1.0, double Kp = 0.5, double Ki = 0.0, double Kd = 0.0)
+    : pid(&current_speed, &pid_out, &set_speed, Kp, Ki, Kd, REVERSE),
+      gear_factor(gearFactor)
   {
   }
 
@@ -49,7 +50,7 @@ public:
     return current_speed;
   }
   
-private:
+public:
   Servo servo;
   I2CEncoder encoder;
   PID pid;
@@ -62,7 +63,7 @@ private:
     if(delta_pos < 1.0 && delta_pos > -1.0)
     {
       double delta_t_secs = (current_time - previous_speed_time) / 1000000.0;
-      current_speed = delta_pos / delta_t_secs;
+      current_speed = (delta_pos / delta_t_secs) * gear_factor;
     }
     previous_position = current_position;
     previous_speed_time = current_time;
@@ -82,12 +83,14 @@ private:
     }
     
     servo.write((int)pwm);
+    //servo.write(110);
   }
 
   double set_speed{0.0};
   double current_speed{0.0};
   double pid_out{0.0};
   double pwm{0.0};
+  double gear_factor{1.0};
   
   double previous_position = 0.0;
   unsigned long previous_speed_time = 0;

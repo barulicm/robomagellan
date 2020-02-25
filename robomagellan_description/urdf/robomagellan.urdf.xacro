@@ -1,0 +1,165 @@
+<?xml version="1.0"?>
+
+<robot name="robomagellan" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <material name="green">
+        <color rgba="0 0.9 0 1"/>
+    </material>
+
+    <material name="white">
+        <color rgba="1 1 1 1"/>
+    </material>
+
+    <material name="black">
+        <color rgba="0 0 0 1"/>
+    </material>
+
+    <!-- TODO consider actually modelling the caster wheel. I don't think it'd actually be that hard -->
+
+    <xacro:include filename="$(find realsense2_description)/urdf/_d435.urdf.xacro"/>
+
+    <link name="base_link">
+        <visual>
+            <geometry>
+                <mesh filename="package://robomagellan_description/meshes/Robot.dae"/>
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <material name="white"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.3302 0.4445 0.0508"/>
+            </geometry>
+            <origin xyz="-0.1397 0 0" rpy="0 0 0"/>
+        </collision>
+        <inertial>
+            <mass value="4.345415"/>
+            <inertia ixx="0.0892310000" ixy="-0.0000914210" ixz="-0.0000972730" iyy="0.0540170000" iyz="-0.0000033360" izz="0.1271810000"/>
+            <origin xyz="-0.1125982 0.0017780 0.0437134"/>
+        </inertial>
+    </link>
+
+    <link name="base_footprint" />
+
+    <link name="gps">
+        <visual>
+            <geometry>
+                <box size="0.0381 0.0381 0.0127"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+    </link>
+
+    <link name="left_wheel">
+        <visual>
+            <geometry>
+                <mesh filename="package://robomagellan_description/meshes/Wheel.dae"/>
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 1.5708"/>
+            <material name="green"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder length="0.0254" radius="0.0635"/>
+            </geometry>
+            <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+        </collision>
+        <inertial>
+            <mass value="0.16"/>
+            <inertia ixx="0.00016989213" ixy="0" ixz="0" iyy="0.00016989213" iyz="0" izz="0.00032258"/>
+        </inertial>
+    </link>
+
+    <link name="right_wheel">
+        <visual>
+            <geometry>
+                <mesh filename="package://robomagellan_description/meshes/Wheel.dae"/>
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 1.5708"/>
+            <material name="green"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder length="0.0254" radius="0.0635"/>
+            </geometry>
+            <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+        </collision>
+        <inertial>
+            <mass value="0.16"/>
+            <inertia ixx="0.00016989213" ixy="0" ixz="0" iyy="0.00016989213" iyz="0" izz="0.00032258"/>
+        </inertial>
+    </link>
+
+    <joint name="base_link_footprint" type="fixed">
+        <parent link="base_footprint"/>
+        <child link="base_link"/>
+        <origin xyz="0 0 0.0635" rpy="0 0 0"/>
+    </joint>
+
+    <joint name="left_wheel_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="left_wheel"/>
+        <origin xyz="0 0.244475 0" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+    </joint>
+
+    <joint name="right_wheel_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="right_wheel"/>
+        <origin xyz="0 -0.244475 0" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+    </joint>
+
+    <joint name="gps_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="gps"/>
+        <origin xyz="0.0508 0 0.381" rpy="0 0 0"/>
+    </joint>
+
+    <xacro:sensor_d435 parent="base_link">
+        <origin xyz="0.0762 0 0.20955" rpy="0 0 0"/>
+    </xacro:sensor_d435>
+
+    <transmission name="left_wheel_transmission">
+        <type>transmission_interface/SimpleTransmission</type>
+        <actuator name="left_wheel_motor">
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+        <joint name="left_wheel_joint">
+            <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+        </joint>
+    </transmission>
+
+    <transmission name="right_wheel_transmission">
+        <type>transmission_interface/SimpleTransmission</type>
+        <actuator name="$right_wheel_motor">
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+        <joint name="right_wheel_joint">
+            <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+        </joint>
+    </transmission>
+
+    <gazebo regerence="left_wheel">
+        <mu1 value="200.0"/>
+        <mu2 value="100.0"/>
+        <kp value="10000000.0"/>
+        <kd value="1.0"/>
+        <material>Gazebo/Grey</material>
+    </gazebo>
+
+    <gazebo regerence="right_wheel">
+        <mu1 value="200.0"/>
+        <mu2 value="100.0"/>
+        <kp value="10000000.0"/>
+        <kd value="1.0"/>
+        <material>Gazebo/Grey</material>
+    </gazebo>
+
+    <gazebo>
+        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+            <robotNamespace>/</robotNamespace>
+        </plugin>
+    </gazebo>
+
+</robot>

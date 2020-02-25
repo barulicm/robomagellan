@@ -16,14 +16,14 @@ constexpr double rotationsToRadians(double rots)
     return rots * 2.0 * M_PI;
 }
 
-constexpr double rpmToRadPerSec(double rpm)
+constexpr double rpsToRadPerSec(double rpm)
 {
-    return rpm * 0.104719755;
+    return rpm * 6.283;
 }
 
-constexpr double radPerSecTORPM(double rad_per_sec)
+constexpr double radPerSecTORPS(double rad_per_sec)
 {
-    return rad_per_sec * 9.5492965964254;
+    return rad_per_sec * 0.1592;
 }
 
 RobomagellanHardwareInterface::RobomagellanHardwareInterface(ros::NodeHandle &node_handle)
@@ -61,7 +61,7 @@ void RobomagellanHardwareInterface::init()
 
     battery_publisher_ = node_handle_.advertise<sensor_msgs::BatteryState>("/robomagellan/battery", 1);
 
-    auto device_name = "/dev/ttyACM0"s;
+    auto device_name = "/dev/ttyACM1"s;
 
     serial_port_.setPort(device_name);
     serial_port_.setBaudrate(115200);
@@ -113,8 +113,8 @@ void RobomagellanHardwareInterface::read()
 
     joint_positions_[0] = rotationsToRadians(std::stod(tokens[0]));
     joint_positions_[1] = rotationsToRadians(std::stod(tokens[1]));
-    joint_velocities_[0] = rpmToRadPerSec(std::stod(tokens[2]));
-    joint_velocities_[1] = rpmToRadPerSec(std::stod(tokens[3]));
+    joint_velocities_[0] = rpsToRadPerSec(std::stod(tokens[2]));
+    joint_velocities_[1] = rpsToRadPerSec(std::stod(tokens[3]));
     const auto battery_voltage = std::stod(tokens[4]);
 
     sensor_msgs::BatteryState battery_msg;
@@ -137,10 +137,12 @@ void RobomagellanHardwareInterface::write(ros::Duration)
 {
     if(!serial_port_.isOpen())
         return;
-    const auto left_rpm = radPerSecTORPM(joint_velocity_commands_[0]);
-    const auto right_rpm = radPerSecTORPM(joint_velocity_commands_[1]);
+    const auto left_rpm = radPerSecTORPS(joint_velocity_commands_[0]);
+    const auto right_rpm = radPerSecTORPS(joint_velocity_commands_[1]);
 
     const auto serial_message = "$" + std::to_string(left_rpm) + ", " + std::to_string(right_rpm) + "\n";
+
+    std::cout << serial_message << std::endl;
 
     serial_port_.write(serial_message);
 
