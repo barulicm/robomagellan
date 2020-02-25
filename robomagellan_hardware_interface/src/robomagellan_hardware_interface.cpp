@@ -61,7 +61,7 @@ void RobomagellanHardwareInterface::init()
 
     battery_publisher_ = node_handle_.advertise<sensor_msgs::BatteryState>("/robomagellan/battery", 1);
 
-    auto device_name = "/dev/ttyACM1"s;
+    const auto device_name = node_handle_.param("port", "/dev/robomagellan_arduino"s);
 
     serial_port_.setPort(device_name);
     serial_port_.setBaudrate(115200);
@@ -141,8 +141,6 @@ void RobomagellanHardwareInterface::write(ros::Duration)
     const auto right_rpm = radPerSecTORPS(joint_velocity_commands_[1]);
 
     const auto serial_message = "$" + std::to_string(left_rpm) + ", " + std::to_string(right_rpm) + "\n";
-
-    std::cout << serial_message << std::endl;
 
     serial_port_.write(serial_message);
 

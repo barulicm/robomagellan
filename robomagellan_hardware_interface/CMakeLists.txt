@@ -11,10 +11,7 @@ find_package(catkin REQUIRED
 )
 
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES robomagellan_hardware_interface
   CATKIN_DEPENDS hardware_interface controller_manager sensor_msgs
-#  DEPENDS system_lib
 )
 
 include_directories(

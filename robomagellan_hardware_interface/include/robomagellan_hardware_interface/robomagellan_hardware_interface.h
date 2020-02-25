@@ -36,21 +36,15 @@ public:
 private:
   hardware_interface::JointStateInterface joint_state_interface_;
   hardware_interface::VelocityJointInterface velocity_joint_interface_;
-  joint_limits_interface::VelocityJointSaturationInterface velocity_joint_saturation_interface_;
   joint_limits_interface::VelocityJointSoftLimitsInterface velocity_joint_soft_limits_interface_;
 
-  int num_joints_;
-  std::vector<std::string> joint_names;
   std::array<double, 2> joint_positions_;
   std::array<double, 2> joint_velocities_;
   std::array<double, 2> joint_efforts_;
   std::array<double, 2> joint_velocity_commands_;
-  std::array<double, 2> joint_lower_limits_;
-  std::array<double, 2> joint_upper_limits_;
 
   ros::NodeHandle node_handle_;
   ros::Timer non_realtime_loop_;
-  ros::Duration control_period_;
   ros::Duration elapsed_time_;
   double loop_hz_;
   boost::shared_ptr<controller_manager::ControllerManager> controller_manager_;

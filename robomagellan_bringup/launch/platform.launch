@@ -3,4 +3,5 @@
     <include file="$(find robomagellan_bringup)/launch/camera.launch" />
     <include file="$(find robomagellan_bringup)/launch/gps.launch" />
     <node name="laptop_battery_monitor" pkg="laptop_battery_monitor" type="laptop_battery.py" />
+    <include file="$(find robomagellan_description)/launch/robot_state_publisher.launch"/>
 </launch>

@@ -1,0 +1,2 @@
+SUBSYSTEM=="tty", ATTRS{manufacturer}=="Arduino (www.arduino.cc)", ATTRS{idProduct}=="0043", SYMLINK+="robomagellan_arduino"
+SUBSYSTEM=="tty", ATTRS{idProduct}=="ea60", ATTRS{idVendor}=="10c4", ATTRS{serial}=="01C73681", SYMLINK+="robomagellan_gps"
