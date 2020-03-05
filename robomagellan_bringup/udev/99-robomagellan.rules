@@ -1,2 +1,3 @@
 SUBSYSTEM=="tty", ATTRS{manufacturer}=="Arduino (www.arduino.cc)", ATTRS{idProduct}=="0043", SYMLINK+="robomagellan_arduino"
 SUBSYSTEM=="tty", ATTRS{idProduct}=="ea60", ATTRS{idVendor}=="10c4", ATTRS{serial}=="01C73681", SYMLINK+="robomagellan_gps"
+SUBSYSTEM=="tty", ATTRS{manufacturer}=="SparkFun", ATTRS{idProduct}=="9d0f", ATTRS{idVendor}=="1b4f", ATTRS{serial}=="4E6F7B9650515159312E314AFF0C1343", SYMLINK+="robomagellan_imu"

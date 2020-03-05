@@ -13,13 +13,6 @@
 #include <ros/ros.h>
 #include <serial/serial.h>
 
-/*
- * TODO consider using https://github.com/wjwwood/serial
- *
- * Cause mine is noooot working
- */
-
-
 namespace robomagellan_hardware_interface
 {
 class RobomagellanHardwareInterface : public hardware_interface::RobotHW

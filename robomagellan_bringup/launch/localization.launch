@@ -1,0 +1,13 @@
+<launch>
+    <rosparam command="load" file="$(find robomagellan_bringup)/config/localization.yaml"/>
+
+    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_local" respawn="true" />
+
+    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_global" respawn="true" />
+
+    <node pkg="robot_localization" type="navsat_transform_node" name="navsat_transform" respawn="true">
+        <remap from="/imu/data" to="/imu" />
+        <remap from="/gps/fix" to="/fix" />
+        <remap from="/odometry/filtered" to="/odom" />
+    </node>
+</launch>
