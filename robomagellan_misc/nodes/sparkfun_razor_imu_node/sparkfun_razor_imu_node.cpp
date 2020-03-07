@@ -47,8 +47,8 @@ int main(int argc, char** argv)
     auto serial_timeout = serial::Timeout::simpleTimeout(250);
     port.setTimeout(serial_timeout);
 
-    ros::Publisher imu_publisher = node_handle.advertise<sensor_msgs::Imu>("/imu", 1);
-    ros::Publisher mag_publisher = node_handle.advertise<sensor_msgs::MagneticField>("/mag", 1);
+    ros::Publisher imu_publisher = node_handle.advertise<sensor_msgs::Imu>("/imu/data", 1);
+    ros::Publisher mag_publisher = node_handle.advertise<sensor_msgs::MagneticField>("/imu/mag", 1);
 
     std_msgs::Header::_seq_type seq = 0;
 
