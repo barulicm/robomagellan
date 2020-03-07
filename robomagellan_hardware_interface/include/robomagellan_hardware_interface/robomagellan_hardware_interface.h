@@ -24,12 +24,14 @@ public:
   void init();
   void update(const ros::TimerEvent& e);
   void read();
-  void write(ros::Duration elapsed_time);
+  void write(const ros::Duration& elapsed_time);
 
 private:
   hardware_interface::JointStateInterface joint_state_interface_;
   hardware_interface::VelocityJointInterface velocity_joint_interface_;
   joint_limits_interface::VelocityJointSoftLimitsInterface velocity_joint_soft_limits_interface_;
+
+  std::string port_name_;
 
   std::array<double, 2> joint_positions_;
   std::array<double, 2> joint_velocities_;
@@ -47,6 +49,8 @@ private:
   serial::Serial serial_port_;
 
   std::string last_sent_message_;
+
+  void tryToOpenPort();
 
   void setupJoint(const std::string& name, int index);
 };

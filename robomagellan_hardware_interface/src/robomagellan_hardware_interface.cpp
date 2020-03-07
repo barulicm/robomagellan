@@ -61,23 +61,15 @@ void RobomagellanHardwareInterface::init()
 
     battery_publisher_ = node_handle_.advertise<sensor_msgs::BatteryState>("/robomagellan/battery", 1);
 
-    const auto device_name = node_handle_.param("port", "/dev/robomagellan_arduino"s);
+    port_name_ = node_handle_.param("port", "/dev/robomagellan_arduino"s);
 
-    serial_port_.setPort(device_name);
-    serial_port_.setBaudrate(115200);
-    auto serial_timeout = serial::Timeout::simpleTimeout(250);
-    serial_port_.setTimeout(serial_timeout);
-
-    serial_port_.open();
-
-    if(!serial_port_.isOpen()) // TODO udev rules / other way to identify port name?
-    {
-        ROS_ERROR_STREAM("Could not open serial port: " << device_name);
-    }
+    tryToOpenPort();
 }
 
 void RobomagellanHardwareInterface::update(const ros::TimerEvent& e)
 {
+    if(!serial_port_.isOpen())
+        tryToOpenPort();
     elapsed_time_ = ros::Duration(e.current_real - e.last_real);
     read();
     controller_manager_->update(ros::Time::now(), elapsed_time_);
@@ -89,61 +81,96 @@ void RobomagellanHardwareInterface::read()
     if(!serial_port_.isOpen())
         return;
 
-    if(last_sent_message_.empty())
-        return;
+    try {
+        if (last_sent_message_.empty())
+            return;
 
-    if(!serial_port_.waitReadable())
+        if (!serial_port_.waitReadable()) {
+            ROS_WARN("Serial port timed out without receiving bytes");
+            return;
+        }
+
+        const auto serial_message = serial_port_.readline();
+
+        std::vector<std::string> tokens;
+        boost::split(tokens, serial_message, boost::is_any_of(",$\n"));
+
+        tokens.erase(std::remove(tokens.begin(), tokens.end(), ""),
+                     tokens.end());
+
+        if (tokens.size() != 5) {
+            ROS_WARN_STREAM(
+                "Received message did not contain the right number of tokens. Expected 5, but got "
+                    << tokens.size() << "\n" << serial_message);
+            return;
+        }
+
+        joint_positions_[0] = rotationsToRadians(std::stod(tokens[0]));
+        joint_positions_[1] = rotationsToRadians(std::stod(tokens[1]));
+        joint_velocities_[0] = rpsToRadPerSec(std::stod(tokens[2]));
+        joint_velocities_[1] = rpsToRadPerSec(std::stod(tokens[3]));
+        const auto battery_voltage = std::stod(tokens[4]);
+
+        sensor_msgs::BatteryState battery_msg;
+        battery_msg.voltage = battery_voltage;
+        battery_msg.present = battery_voltage > 4.0;
+        battery_msg.current = NAN;
+        battery_msg.charge = NAN;
+        battery_msg.capacity = NAN;
+        battery_msg.design_capacity = NAN;
+        battery_msg.percentage = NAN;
+        battery_msg.power_supply_status = battery_msg.present
+                                          ? sensor_msgs::BatteryState::POWER_SUPPLY_STATUS_DISCHARGING
+                                          : sensor_msgs::BatteryState::POWER_SUPPLY_STATUS_UNKNOWN;
+        battery_msg.power_supply_health = sensor_msgs::BatteryState::POWER_SUPPLY_HEALTH_UNKNOWN;
+        battery_msg.power_supply_technology = sensor_msgs::BatteryState::POWER_SUPPLY_TECHNOLOGY_NIMH;
+        battery_publisher_.publish(battery_msg);
+
+        last_sent_message_.clear();
+    } catch(const std::exception& e)
     {
-        ROS_WARN("Serial port timed out without receiving bytes");
-        return;
+        ROS_WARN_STREAM("Serial exception: " << e.what());
+        serial_port_.close();
     }
-
-    const auto serial_message = serial_port_.readline();
-
-    std::vector<std::string> tokens;
-    boost::split(tokens, serial_message, boost::is_any_of(",$\n"));
-
-    tokens.erase(std::remove(tokens.begin(), tokens.end(), ""), tokens.end());
-
-    if(tokens.size() != 5)
-    {
-        ROS_WARN_STREAM("Received message did not contain the right number of tokens. Expected 5, but got " << tokens.size() << "\n" << serial_message);
-        return;
-    }
-
-    joint_positions_[0] = rotationsToRadians(std::stod(tokens[0]));
-    joint_positions_[1] = rotationsToRadians(std::stod(tokens[1]));
-    joint_velocities_[0] = rpsToRadPerSec(std::stod(tokens[2]));
-    joint_velocities_[1] = rpsToRadPerSec(std::stod(tokens[3]));
-    const auto battery_voltage = std::stod(tokens[4]);
-
-    sensor_msgs::BatteryState battery_msg;
-    battery_msg.voltage = battery_voltage;
-    battery_msg.present = battery_voltage > 4.0;
-    battery_msg.current = NAN;
-    battery_msg.charge = NAN;
-    battery_msg.capacity = NAN;
-    battery_msg.design_capacity = NAN;
-    battery_msg.percentage = NAN;
-    battery_msg.power_supply_status = battery_msg.present ? sensor_msgs::BatteryState::POWER_SUPPLY_STATUS_DISCHARGING : sensor_msgs::BatteryState::POWER_SUPPLY_STATUS_UNKNOWN;
-    battery_msg.power_supply_health = sensor_msgs::BatteryState::POWER_SUPPLY_HEALTH_UNKNOWN;
-    battery_msg.power_supply_technology = sensor_msgs::BatteryState::POWER_SUPPLY_TECHNOLOGY_NIMH;
-    battery_publisher_.publish(battery_msg);
-
-    last_sent_message_.clear();
 }
 
-void RobomagellanHardwareInterface::write(ros::Duration)
+void RobomagellanHardwareInterface::write(const ros::Duration&)
 {
     if(!serial_port_.isOpen())
         return;
-    const auto left_rpm = radPerSecTORPS(joint_velocity_commands_[0]);
-    const auto right_rpm = radPerSecTORPS(joint_velocity_commands_[1]);
+    try {
 
-    const auto serial_message = "$" + std::to_string(left_rpm) + ", " + std::to_string(right_rpm) + "\n";
+        const auto left_rpm = radPerSecTORPS(joint_velocity_commands_[0]);
+        const auto right_rpm = radPerSecTORPS(joint_velocity_commands_[1]);
 
-    serial_port_.write(serial_message);
+        const auto serial_message =
+            "$" + std::to_string(left_rpm) + ", " + std::to_string(right_rpm) +
+            "\n";
 
-    last_sent_message_ = serial_message;
+        serial_port_.write(serial_message);
+
+        last_sent_message_ = serial_message;
+    } catch (const std::exception& e)
+    {
+        ROS_WARN_STREAM("Serial exception: " << e.what());
+        serial_port_.close();
+    }
 }
+
+void RobomagellanHardwareInterface::tryToOpenPort()
+{
+    try {
+        serial_port_.setPort(port_name_);
+        serial_port_.setBaudrate(115200);
+        auto serial_timeout = serial::Timeout::simpleTimeout(250);
+        serial_port_.setTimeout(serial_timeout);
+        serial_port_.open();
+        ROS_INFO_STREAM("Connected to motor control arduino on serial port " << port_name_);
+        return;
+    } catch (const std::exception& e)
+    {
+        ROS_WARN_STREAM_THROTTLE(60, "Could not open serial port, " << port_name_ << ": " << e.what());
+    }
+}
+
 }
