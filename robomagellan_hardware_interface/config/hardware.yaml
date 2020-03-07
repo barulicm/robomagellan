@@ -2,5 +2,5 @@ robomagellan:
   hardware_interface:
     loop_hz: 10
     joints:
-      - left_wheel
-      - right_wheel
+      - left_wheel_joint
+      - right_wheel_joint

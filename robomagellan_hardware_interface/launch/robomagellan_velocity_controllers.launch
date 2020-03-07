@@ -4,6 +4,8 @@
     <rosparam file="$(find robomagellan_hardware_interface)/config/joint_limits.yaml" command="load"/>
     <rosparam file="$(find robomagellan_hardware_interface)/config/diff_drive_controller.yaml" command="load"/>
 
+    <remap from="/diff_drive_controller/odom" to="/odometry/wheel"/>
+
     <node name="robomagellan_hardware_interface" pkg="robomagellan_hardware_interface" type="node" output="screen"/>
 
     <node name="diff_controller_spawner"  pkg="controller_manager"  type="spawner"  output="screen"  args="diff_drive_controller" ns="/"/>

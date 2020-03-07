@@ -4,7 +4,7 @@ ekf_local:
   two_d_mode: true
   map_frame: map
   odom_frame: odom
-  base_link_frame: base_link
+  base_link_frame: base_footprint
   world_frame: odom
 
   odom0: odometry/wheel
@@ -71,7 +71,7 @@ ekf_global:
   two_d_mode: true
   map_frame: map
   odom_frame: odom
-  base_link_frame: base_link
+  base_link_frame: base_footprint
   world_frame: map
 
   odom0: odometry/wheel

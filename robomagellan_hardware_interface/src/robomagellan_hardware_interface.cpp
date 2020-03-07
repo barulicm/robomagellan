@@ -52,8 +52,8 @@ void RobomagellanHardwareInterface::setupJoint(const std::string& name, int inde
 
 void RobomagellanHardwareInterface::init()
 {
-    setupJoint("left_wheel", 0);
-    setupJoint("right_wheel", 1);
+    setupJoint("left_wheel_joint", 0);
+    setupJoint("right_wheel_joint", 1);
 
     registerInterface(&joint_state_interface_);
     registerInterface(&velocity_joint_interface_);
