@@ -1,0 +1,13 @@
+<launch>
+ <node pkg="mbf_costmap_nav" type="mbf_costmap_nav" name="navigation_server" output="screen">
+     <param name="tf_timeout" value="1.5"/>
+     <param name="planner_frequency" value="2.0"/>
+     <param name="planner_max_retries" value="3"/>
+     <param name="controller_frequency" value="5.0" />
+     <param name="controller_patience" value="1.0" />
+     <param name="robot_frame" value="base_footprint" />
+     <param name="global_frame" value="map" />
+     <param name="map_frame" value="map" />
+     <rosparam file="$(find robomagellan_navigation)/config/navigation_server_params.yaml" command="load"/>
+ </node>
+</launch>

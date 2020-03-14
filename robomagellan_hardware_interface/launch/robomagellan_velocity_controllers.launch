@@ -5,6 +5,7 @@
     <rosparam file="$(find robomagellan_hardware_interface)/config/diff_drive_controller.yaml" command="load"/>
 
     <remap from="/diff_drive_controller/odom" to="/odometry/wheel"/>
+    <remap from="/diff_drive_controller/cmd_vel" to="/cmd_vel"/>
 
     <node name="robomagellan_hardware_interface" pkg="robomagellan_hardware_interface" type="node" output="screen"/>
 

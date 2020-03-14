@@ -1,4 +1,4 @@
 <launch>
     <include file="$(find robomagellan_bringup)/launch/localization.launch"/>
-    <include file="$(find robomagellan_bringup)/launch/navigation.launch"/>
+    <include file="$(find robomagellan_navigation)/launch/navigation.launch"/>
 </launch>

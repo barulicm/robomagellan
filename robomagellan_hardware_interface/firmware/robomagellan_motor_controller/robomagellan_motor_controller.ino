@@ -37,7 +37,7 @@ void parseCommand()
 {
   while(Serial.read() != '$');
   left_motor.setSpeed(Serial.parseFloat());
-  right_motor.setSpeed(-1.0*Serial.parseFloat());
+  right_motor.setSpeed(-1*Serial.parseFloat());
   Serial.read(); // Take the newline out of the receive buffer
 }
 
@@ -46,11 +46,11 @@ void sendReply()
   Serial.print("$");
   Serial.print(left_motor.getPosition());
   Serial.print(",");
-  Serial.print(right_motor.getPosition());
+  Serial.print(-1*right_motor.getPosition());
   Serial.print(",");
   Serial.print(left_motor.getSpeed());
   Serial.print(",");
-  Serial.print(right_motor.getSpeed());
+  Serial.print(-1*right_motor.getSpeed());
   Serial.print(",");
   Serial.print(analogRead(battery_pin));
   Serial.println();

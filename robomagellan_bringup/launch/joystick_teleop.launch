@@ -15,6 +15,6 @@
         <param name="axis_angular" value="0"/>
         <param name="scale_angular" value="2.0"/>
 
-        <remap from="cmd_vel" to="/diff_drive_controller/cmd_vel"/>
+        <remap from="cmd_vel" to="/cmd_vel"/>
     </node>
 </launch>

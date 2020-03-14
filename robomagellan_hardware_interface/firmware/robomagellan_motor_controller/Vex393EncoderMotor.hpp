@@ -58,12 +58,12 @@ public:
   void updateSpeed()
   {
     unsigned long current_time = micros();
-    double current_position = encoder.getPosition();
+    double current_position = encoder.getPosition() * gear_factor;
     double delta_pos = current_position - previous_position;
     if(delta_pos < 1.0 && delta_pos > -1.0)
     {
       double delta_t_secs = (current_time - previous_speed_time) / 1000000.0;
-      current_speed = (delta_pos / delta_t_secs) * gear_factor;
+      current_speed = (delta_pos / delta_t_secs);
     }
     previous_position = current_position;
     previous_speed_time = current_time;
