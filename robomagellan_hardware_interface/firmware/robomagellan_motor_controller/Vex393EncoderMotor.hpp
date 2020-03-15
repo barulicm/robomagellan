@@ -2,7 +2,7 @@
 #include <I2CEncoder.h>
 #include <Servo.h>
 #include <PID_v1.h>
-
+#include "WindowedFilter.hpp"
 
 class Vex393EncoderMotor
 {
@@ -63,7 +63,7 @@ public:
     if(delta_pos < 1.0 && delta_pos > -1.0)
     {
       double delta_t_secs = (current_time - previous_speed_time) / 1000000.0;
-      current_speed = (delta_pos / delta_t_secs);
+      current_speed = speed_filter.filter(delta_pos / delta_t_secs);
     }
     previous_position = current_position;
     previous_speed_time = current_time;
@@ -94,6 +94,8 @@ public:
   
   double previous_position = 0.0;
   unsigned long previous_speed_time = 0;
+
+  WindowedFilter<5> speed_filter;
 
   static const double STOPPED_PWM{90.0};
   static const double MAX_PWM{150.0};

@@ -52,6 +52,6 @@ void sendReply()
   Serial.print(",");
   Serial.print(-1*right_motor.getSpeed());
   Serial.print(",");
-  Serial.print(analogRead(battery_pin));
+  Serial.print(battery_factor * analogRead(battery_pin));
   Serial.println();
 }
