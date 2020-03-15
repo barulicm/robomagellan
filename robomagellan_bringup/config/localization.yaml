@@ -146,8 +146,8 @@ ekf_global:
 navsat_transform:
   frequency: 30
   delay: 3.0
-  magnetic_declination_radians: 0.0429351 # TODO look this up
-  yaw_offset: 0  # TODO check imu. if 0 is east, this should be 0, if 0 is north, this should be pi/2
+  magnetic_declination_radians: 0.2713987 # SEA-TAC
+  yaw_offset: 0
   zero_altitude: false
   broadcast_utm_transform: true
   publish_filtered_gps: true

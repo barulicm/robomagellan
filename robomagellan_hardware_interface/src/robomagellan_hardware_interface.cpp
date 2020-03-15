@@ -26,8 +26,9 @@ constexpr double radPerSecTORPS(double rad_per_sec)
     return rad_per_sec * 0.1592;
 }
 
-RobomagellanHardwareInterface::RobomagellanHardwareInterface(ros::NodeHandle &node_handle)
-    : node_handle_(node_handle)
+RobomagellanHardwareInterface::RobomagellanHardwareInterface(ros::NodeHandle &node_handle, ros::NodeHandle& private_node_handle)
+    : node_handle_(node_handle),
+      private_node_handle_(private_node_handle)
 {
     init();
     controller_manager_.reset(new controller_manager::ControllerManager(this, node_handle_));
@@ -61,7 +62,7 @@ void RobomagellanHardwareInterface::init()
 
     battery_publisher_ = node_handle_.advertise<sensor_msgs::BatteryState>("/robomagellan/battery", 1);
 
-    port_name_ = node_handle_.param("port", "/dev/robomagellan_arduino"s);
+    port_name_ = private_node_handle_.param("port", "/dev/robomagellan_arduino"s);
 
     tryToOpenPort();
 }

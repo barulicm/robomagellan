@@ -1,5 +1,5 @@
 <launch>
-    <node name="imu_node" pkg="robomagellan_misc" type="sparkfun_razor_imu_node">
+    <node name="imu_node" pkg="robomagellan_misc" type="sparkfun_razor_imu_node" output="screen">
         <param name="port" value="/dev/robomagellan_imu" />
     </node>
 </launch>

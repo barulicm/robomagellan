@@ -32,17 +32,16 @@ int main(int argc, char** argv)
 
     ros::NodeHandle node_handle;
 
-    const auto port_name = node_handle.param("port", "/dev/ttyACM1"s);
-    const auto baud = node_handle.param("baud", 115200);
-    const auto frame_id = node_handle.param("frame_id", "imu"s);
+    ros::NodeHandle private_node_handle("~");
 
-    serial::Serial port(port_name, baud);
+    const auto port_name = private_node_handle.param("port", "/dev/ttyACM1"s);
+    const auto baud = private_node_handle.param("baud", 115200);
+    const auto frame_id = private_node_handle.param("frame_id", "imu"s);
 
-    if(!port.isOpen())
-    {
-        ROS_FATAL_STREAM("Unable to open serial port " << port_name);
-        return 1;
-    }
+    serial::Serial port;
+
+    port.setPort(port_name);
+    port.setBaudrate(baud);
 
     auto serial_timeout = serial::Timeout::simpleTimeout(250);
     port.setTimeout(serial_timeout);
@@ -54,57 +53,80 @@ int main(int argc, char** argv)
 
     while(ros::ok())
     {
-        if(!port.waitReadable())
-        {
-            ROS_WARN("Serial connection timed out without new data available");
-            continue;
+        try {
+            if (!port.isOpen()) {
+                port.open();
+                ROS_INFO_STREAM("Connected to serial device: " << port_name);
+            }
+
+            if (!port.waitReadable()) {
+                ROS_WARN(
+                    "Serial connection timed out without new data available");
+                continue;
+            }
+
+            const auto serial_message = port.readline();
+
+            std::vector<std::string> tokens;
+            boost::split(tokens, serial_message, boost::is_any_of(","));
+
+            if (tokens.size() != 13) {
+                ROS_WARN_STREAM(
+                    "Serial connection received a message with the wrong number of tokens ("
+                        << tokens.size() << "): " << serial_message);
+                continue;
+            }
+
+            sensor_msgs::Imu imu_message;
+            sensor_msgs::MagneticField mag_message;
+
+            imu_message.header.stamp = ros::Time::now();
+            imu_message.header.frame_id = frame_id;
+            imu_message.header.seq = seq++;
+
+            mag_message.header = imu_message.header;
+
+            imu_message.linear_acceleration.x = gToMpss(std::stod(tokens[0]));
+            imu_message.linear_acceleration.y = gToMpss(std::stod(tokens[1]));
+            imu_message.linear_acceleration.z = gToMpss(std::stod(tokens[2]));
+
+            imu_message.angular_velocity.x = dpsToRps(std::stod(tokens[3]));
+            imu_message.angular_velocity.y = dpsToRps(std::stod(tokens[4]));
+            imu_message.angular_velocity.z = dpsToRps(std::stod(tokens[5]));
+
+            mag_message.magnetic_field.x = std::stod(tokens[6]);
+            mag_message.magnetic_field.y = std::stod(tokens[7]);
+            mag_message.magnetic_field.z = std::stod(tokens[8]);
+
+            imu_message.orientation.w = std::stod(tokens[9]);
+            imu_message.orientation.x = std::stod(tokens[10]);
+            imu_message.orientation.y = std::stod(tokens[11]);
+            imu_message.orientation.z = std::stod(tokens[12]);
+
+            imu_message.orientation_covariance[0] = -1;
+            imu_message.linear_acceleration_covariance[0] = -1;
+            imu_message.angular_velocity_covariance[0] = -1;
+
+            imu_publisher.publish(imu_message);
+            mag_publisher.publish(mag_message);
+
+            ros::spinOnce();
         }
-
-        const auto serial_message = port.readline();
-
-        std::vector<std::string> tokens;
-        boost::split(tokens, serial_message, boost::is_any_of(","));
-
-        if(tokens.size() != 13)
+        catch(const serial::IOException& e)
         {
-            ROS_WARN_STREAM("Serial connection received a message with the wrong number of tokens (" << tokens.size() << "): " << serial_message);
-            continue;
+            ROS_ERROR_STREAM_THROTTLE(60, "Serial IO exception: " << e.what());
+            port.close();
         }
-
-        sensor_msgs::Imu imu_message;
-        sensor_msgs::MagneticField mag_message;
-
-        imu_message.header.stamp = ros::Time::now();
-        imu_message.header.frame_id = frame_id;
-        imu_message.header.seq = seq++;
-
-        mag_message.header = imu_message.header;
-
-        imu_message.linear_acceleration.x = gToMpss(std::stod(tokens[0]));
-        imu_message.linear_acceleration.y = gToMpss(std::stod(tokens[1]));
-        imu_message.linear_acceleration.z = gToMpss(std::stod(tokens[2]));
-
-        imu_message.angular_velocity.x = dpsToRps(std::stod(tokens[3]));
-        imu_message.angular_velocity.y = dpsToRps(std::stod(tokens[4]));
-        imu_message.angular_velocity.z = dpsToRps(std::stod(tokens[5]));
-
-        mag_message.magnetic_field.x = std::stod(tokens[6]);
-        mag_message.magnetic_field.y = std::stod(tokens[7]);
-        mag_message.magnetic_field.z = std::stod(tokens[8]);
-
-        imu_message.orientation.w = std::stod(tokens[9]);
-        imu_message.orientation.x = std::stod(tokens[10]);
-        imu_message.orientation.y = std::stod(tokens[11]);
-        imu_message.orientation.z = std::stod(tokens[12]);
-
-        imu_message.orientation_covariance[0] = -1;
-        imu_message.linear_acceleration_covariance[0] = -1;
-        imu_message.angular_velocity_covariance[0] = -1;
-
-        imu_publisher.publish(imu_message);
-        mag_publisher.publish(mag_message);
-
-        ros::spinOnce();
+        catch(const serial::SerialException& e)
+        {
+            ROS_ERROR_STREAM_THROTTLE(60, "Serial exception: " << e.what());
+            port.close();
+        }
+        catch(const serial::PortNotOpenedException& e)
+        {
+            ROS_ERROR_STREAM_THROTTLE(60, "Serial port not opened. " << e.what());
+            port.close();
+        }
     }
 
     return 0;

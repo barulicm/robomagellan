@@ -18,7 +18,7 @@ namespace robomagellan_hardware_interface
 class RobomagellanHardwareInterface : public hardware_interface::RobotHW
 {
 public:
-  RobomagellanHardwareInterface(ros::NodeHandle &node_handle);
+  RobomagellanHardwareInterface(ros::NodeHandle &node_handle, ros::NodeHandle& private_node_handle);
   ~RobomagellanHardwareInterface() = default;
 
   void init();
@@ -39,6 +39,7 @@ private:
   std::array<double, 2> joint_velocity_commands_;
 
   ros::NodeHandle node_handle_;
+  ros::NodeHandle private_node_handle_;
   ros::Timer non_realtime_loop_;
   ros::Duration elapsed_time_;
   double loop_hz_;
