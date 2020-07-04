@@ -35,7 +35,6 @@ local_costmap:
   update_frequency: 10
   track_unknown_space: false
   unknown_cost_value: 30
-  static_map: false
   rolling_window: true
   resolution: 0.1
 

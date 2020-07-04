@@ -16,23 +16,35 @@ constexpr double rotationsToRadians(double rots)
     return rots * 2.0 * M_PI;
 }
 
-constexpr double rpsToRadPerSec(double rpm)
+constexpr double rpsToRadPerSec(double rps)
 {
-    return rpm * 6.283;
+    return rps * 2.0 * M_PI;
 }
 
 constexpr double radPerSecTORPS(double rad_per_sec)
 {
-    return rad_per_sec * 0.1592;
+    return rad_per_sec * 0.5 * M_1_PI;
 }
 
 RobomagellanHardwareInterface::RobomagellanHardwareInterface(ros::NodeHandle &node_handle, ros::NodeHandle& private_node_handle)
     : node_handle_(node_handle),
       private_node_handle_(private_node_handle)
 {
-    init();
+    setupJoint("left_wheel_joint", 0);
+    setupJoint("right_wheel_joint", 1);
+
+    registerInterface(&joint_state_interface_);
+    registerInterface(&velocity_joint_interface_);
+    registerInterface(&velocity_joint_soft_limits_interface_);
+
+    battery_publisher_ = node_handle_.advertise<sensor_msgs::BatteryState>("/robomagellan/battery", 1);
+
+    port_name_ = private_node_handle_.param("port", "/dev/robomagellan_arduino"s);
+
+    tryToOpenPort();
+
     controller_manager_.reset(new controller_manager::ControllerManager(this, node_handle_));
-    node_handle_.param("/robomagellan/hardware_interface/loop_hz", loop_hz_, 0.1);
+    node_handle_.param("/robomagellan/hardware_interface/loop_hz", loop_hz_, loop_hz_);
     ros::Duration update_freq = ros::Duration(1.0 / loop_hz_);
     non_realtime_loop_ = node_handle_.createTimer(update_freq, &RobomagellanHardwareInterface::update, this);
 }
@@ -49,22 +61,6 @@ void RobomagellanHardwareInterface::setupJoint(const std::string& name, int inde
     VelocityJointSoftLimitsHandle joint_limits_handle(joint_velocity_handle, limits, soft_limits);
     velocity_joint_soft_limits_interface_.registerHandle(joint_limits_handle);
     velocity_joint_interface_.registerHandle(joint_velocity_handle);
-}
-
-void RobomagellanHardwareInterface::init()
-{
-    setupJoint("left_wheel_joint", 0);
-    setupJoint("right_wheel_joint", 1);
-
-    registerInterface(&joint_state_interface_);
-    registerInterface(&velocity_joint_interface_);
-    registerInterface(&velocity_joint_soft_limits_interface_);
-
-    battery_publisher_ = node_handle_.advertise<sensor_msgs::BatteryState>("/robomagellan/battery", 1);
-
-    port_name_ = private_node_handle_.param("port", "/dev/robomagellan_arduino"s);
-
-    tryToOpenPort();
 }
 
 void RobomagellanHardwareInterface::update(const ros::TimerEvent& e)
@@ -135,11 +131,12 @@ void RobomagellanHardwareInterface::read()
     }
 }
 
-void RobomagellanHardwareInterface::write(const ros::Duration&)
+void RobomagellanHardwareInterface::write(const ros::Duration& elapsed_time)
 {
     if(!serial_port_.isOpen())
         return;
     try {
+        velocity_joint_soft_limits_interface_.enforceLimits(elapsed_time);
 
         const auto left_rpm = radPerSecTORPS(joint_velocity_commands_[0]);
         const auto right_rpm = radPerSecTORPS(joint_velocity_commands_[1]);
