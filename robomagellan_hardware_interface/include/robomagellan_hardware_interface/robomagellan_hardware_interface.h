@@ -41,8 +41,7 @@ private:
 
   ros::NodeHandle node_handle_;
   ros::NodeHandle private_node_handle_;
-  ros::Timer non_realtime_loop_;
-  ros::Duration elapsed_time_;
+  ros::Timer update_timer_;
   double loop_hz_ = 10.0;
   boost::shared_ptr<controller_manager::ControllerManager> controller_manager_;
 

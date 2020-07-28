@@ -46,7 +46,7 @@ RobomagellanHardwareInterface::RobomagellanHardwareInterface(ros::NodeHandle &no
     controller_manager_.reset(new controller_manager::ControllerManager(this, node_handle_));
     node_handle_.param("/robomagellan/hardware_interface/loop_hz", loop_hz_, loop_hz_);
     ros::Duration update_freq = ros::Duration(1.0 / loop_hz_);
-    non_realtime_loop_ = node_handle_.createTimer(update_freq, &RobomagellanHardwareInterface::update, this);
+    update_timer_ = node_handle_.createTimer(update_freq, &RobomagellanHardwareInterface::update, this);
 }
 
 void RobomagellanHardwareInterface::setupJoint(const std::string& name, int index)
@@ -67,10 +67,10 @@ void RobomagellanHardwareInterface::update(const ros::TimerEvent& e)
 {
     if(!serial_port_.isOpen())
         tryToOpenPort();
-    elapsed_time_ = ros::Duration(e.current_real - e.last_real);
+    auto elapsed_time = ros::Duration(e.current_real - e.last_real);
     read();
-    controller_manager_->update(ros::Time::now(), elapsed_time_);
-    write(elapsed_time_);
+    controller_manager_->update(ros::Time::now(), elapsed_time);
+    write(elapsed_time);
 }
 
 void RobomagellanHardwareInterface::read()

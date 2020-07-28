@@ -3,13 +3,13 @@
     <rosparam file="$(find robomagellan_hardware_interface)/config/diff_drive_controller.yaml" command="load"/>
     <rosparam file="$(find robomagellan_hardware_interface)/config/joint_limits.yaml" command="load"/>
 
-    <remap from="/diff_drive_controller/odom" to="/odometry/wheel"/>
-    <remap from="/diff_drive_controller/cmd_vel" to="/cmd_vel"/>
+    <remap from="/robomagellan/diff_drive_controller/odom" to="/odometry/wheel"/>
+    <remap from="/robomagellan/diff_drive_controller/cmd_vel" to="/cmd_vel"/>
 
     <node name="robomagellan_hardware_interface" pkg="robomagellan_hardware_interface" type="node" output="screen"/>
 
-    <node name="diff_controller_spawner"  pkg="controller_manager"  type="spawner"  output="screen"  args="/robomagellan/diff_drive_controller" ns="/"/>
+    <node name="diff_drive_controller_spawner"  pkg="controller_manager"  type="spawner"  output="screen"  args="/robomagellan/diff_drive_controller" ns="/"/>
 
-    <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" ns="/"
+    <node name="joint_state_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" ns="/"
           args="/robomagellan/joint_state_controller"/>
 </launch>
