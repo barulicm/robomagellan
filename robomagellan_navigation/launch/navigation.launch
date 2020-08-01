@@ -10,4 +10,21 @@
      <param name="map_frame" value="map" />
      <rosparam file="$(find robomagellan_navigation)/config/navigation_server_params.yaml" command="load"/>
  </node>
+ 
+ 
+ <remap from="/move_base_flex/set_parameters" to="/navigation_server/set_parameters" />
+ 
+ <remap from="/move_base_flex/move_base/cancel" to="/navigation_server/move_base/cancel" />
+ <remap from="/move_base_flex/move_base/feedback" to="/navigation_server/move_base/feedback" />
+ <remap from="/move_base_flex/move_base/goal" to="/navigation_server/move_base/goal" />
+ <remap from="/move_base_flex/move_base/result" to="/navigation_server/move_base/result" />
+ <remap from="/move_base_flex/move_base/status" to="/navigation_server/move_base/status" />
+ 
+ <remap from="/move_base_flex/get_path/cancel" to="/navigation_server/get_path/cancel" />
+ <remap from="/move_base_flex/get_path/feedback" to="/navigation_server/get_path/feedback" />
+ <remap from="/move_base_flex/get_path/goal" to="/navigation_server/get_path/goal" />
+ <remap from="/move_base_flex/get_path/result" to="/navigation_server/get_path/result" />
+ <remap from="/move_base_flex/get_path/status" to="/navigation_server/get_path/status" />
+ 
+ <node pkg="mbf_costmap_nav" type="move_base_legacy_relay.py" name="move_base_legacy_relay" output="screen" />
 </launch>

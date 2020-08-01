@@ -10,7 +10,8 @@ wheel_radius: 0.0635
 pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
 twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
 
-base_fram_id: base_link
+base_frame_id: base_footprint
+enable_odom_tf: false
 
 linear:
   x:
